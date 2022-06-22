@@ -1,0 +1,38 @@
+# Welcome to serverless. Read the docs
+# https://serverless.com/framework/docs/
+
+# Serverless.yml is the configuration the CLI
+# uses to deploy your code to your provider of choice
+
+# The `service` block is the name of the service
+service: finalproject
+
+frameworkVersion: '3'
+
+custom: 
+  config: ${file(config/${opt:stage, 'dev'}.yml)}
+  
+provider:
+  name: aws
+  runtime: nodejs12.x
+  region: us-east-1
+
+  iamRoleStatements:
+    - Effect: 'Allow'
+      Action:
+        - 'sqs:ReceiveMessage'
+        - 'sqs:DeleteMessage'
+      Resource: 'arn:aws:sqs:us-east-1:265700068377:MyFirstQueue'
+
+  environment:
+    ENV: ${self:custom.config.ENV}
+
+functions: 
+  processOrder:
+    handler: handler.processOrder
+    # Setup Lambda Trigger
+    events:
+      - sqs:
+          arn: 'arn:aws:sqs:us-east-1:265700068377:MyFirstQueue'
+          batchSize: 10
+  
